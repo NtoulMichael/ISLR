@@ -1,0 +1,51 @@
+---
+title: "Ex.8Chapter12"
+author: "Ntoulmperis Michail"
+date: "27/5/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##  We are going to try 2 diffrent methods, hoping we can get the same results
+
+```{r}
+set.seed(1)
+
+pr.out <- prcomp(USArrests, scale = TRUE)
+
+```
+## (a)
+```{r}
+
+pr.var <- pr.out$sdev^2
+pve_1 <- pr.var/sum(pr.var)
+
+
+```
+## (b)
+```{r}
+USArrests_scaled <- scale(USArrests)
+denom <- sum(apply(USArrests_scaled^2, 2, sum))
+
+Phi <- pr.out$rotation
+USArrests_projected <- USArrests_scaled %*% Phi 
+```
+The above is the same result as pr.out$x
+```{r}
+numer <- apply(pr.out$x^2, 2, sum)
+pve_2 <- numer/denom
+
+```
+## In conclusion we get :
+
+```{r}
+print(pve_1)
+
+print(pve_2)
+
+print(pve_1 - pve_2 )
+
+```

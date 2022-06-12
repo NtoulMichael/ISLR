@@ -1,0 +1,122 @@
+---
+title: "Ex.7Chapter8"
+author: "Ntoulmperis Michail"
+date: "26/5/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##  We will try and find out which is better for a random data set that we created.
+## Supports Vector Machine vs Support Vector Classifier
+
+
+First we load the libraries.
+
+```{r, warning = FALSE, message = FALSE}
+library(e1071)
+```
+
+## Create a data set and make a plot.
+```{r}
+set.seed(1)
+x <- matrix(rnorm(100*2), ncol=2)
+y <- c(rep(-1, 50), rep(1, 50))
+x[y == 1, ] <- x[y == 1, ] + 1
+plot(x, col=(3 - y))
+df <- data.frame(x=x, y=as.factor(y))
+```
+
+Our data seems to be around the center of the plot, this makes us think that
+the best model will be that of the svm.
+
+
+## Lets build a support vector classifier model.
+
+```{r}
+
+svmfit <- svm(y ~ ., data=df, kernel="linear", cost=100, scale = FALSE)
+
+plot(svmfit, df)
+
+summary(svmfit)
+```
+## Summarry of model.
+
+As we see from the summary function the model used a huge amound of the data
+and created 49 vectors. Lets try to optimize that by finding the optimal C.
+
+```{r}
+
+set.seed(1)
+tune.out <- tune(svm, y ~ ., data=df, kernel="linear",
+                 range=list(cost=c(0.001, 0.01, 0.1, 1., 5., 10, 100)))
+summary(tune.out)
+
+bestmod <- tune.out$best.model
+
+plot(bestmod, df)
+```
+
+For C=0.1 seems that we gets the best model. Lets test the model on new data.
+
+```{r}
+
+# Test data set
+xtest <- matrix(rnorm(100*2), ncol=2)
+ytest <- sample(c(-1, 1), 100, rep=TRUE)
+xtest[ytest == 1,] <- xtest[ytest==1, ] + 1
+testdata <- data.frame(x=xtest, y=as.factor(ytest))
+
+# Predict
+summary(bestmod)
+ypred <- predict(bestmod, testdata)
+table(predict=ypred, truth=testdata$y)
+
+```
+It seems that our optimized  model had a 27% of the observations assigned to 
+the wrong class. Also, we need to mention that with the optimization we did 
+with cross validation method we reduced the number of vectors from 49 to 16. 
+Now lets try a different aproach using the kernel = "radial" svm model.
+
+```{r}
+
+svmfit <- svm(y ~ ., data=df, kernel="radial", gamma=1, cost=1)
+plot(svmfit, df)
+summary(svmfit)
+
+
+```
+The number of support vectors is 15 and up until now,our new seems to do a better
+job then previous one. Lets try optimize it (find the optimal C and gamma) 
+and test it on a new data set.
+
+
+```{r}
+set.seed(1)
+tune.out <- tune(svm, y ~ ., data=df, kernel="radial",
+                 ranges=list(cost=c(0.01, 1, 10, 100, 1000),
+                             gamma=c(0.5, 1, 2, 3, 4)))
+summary(tune.out)
+# Confusion Matrix
+ytest <- predict(tune.out$best.model, newdata=testdata)
+table(pred=ytest, true=testdata$y)
+plot(tune.out$best.model,testdata)
+
+
+```
+## Conclusion
+
+Its seems that with the support vector machines(kernel="radial") we did a worse
+job at predicting the classes of the new data. Our new optimized model has a C 
+of 10 and a gamma of 0.5 . The new model miss classified 34% of the the new data
+while the first one (meaning the support vector classifier) miss classified 27%.
+Although at first the data were spead out in way that made think a svc would not
+make a good prediction and that a svm model with the kernel="radiant" would 
+perform beter, we fount out that the svc was better inthis case.
+
+
+
+

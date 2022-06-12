@@ -1,0 +1,73 @@
+---
+title: "Exercise 12, Chapter 3"
+author: "Ntoulmperis Mixalis"
+date: "20/05/2022"
+output:
+  ioslides_presentation:
+    smaller: no
+  beamer_presentation: default
+---
+\newpage
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## (a) To start with we define our equations:
+\
+*Regression of Y onto X*
+$$\hat{y} = \hat{β_a}x$$
+\
+*Regression of X onto y*
+$$\hat{x} = \hat{β_b}y$$
+\newpage
+
+## For each of the previous equations the slope is defined as:
+$$\hat{β_a}=\sum_{i = 1}^{n}\frac {xy}{x^2}$$
+\
+$$\hat{β_b}=\sum_{i = 1}^{n}\frac {yx}{y^2}$$
+\newpage
+
+## Finally, we find that :
+\
+\
+\
+\
+\
+$$\hat{β_a}=\hat{β_b} <=>\sum_{i = 1}^{n}\frac {xy}{x^2}=\sum_{i = 1}^{n}\frac {yx}{y^2} <=> \sum_{i = 1}^{n}x^2_i=\sum_{i = 1}^{n}y^2_i$$
+\newpage
+
+## (b) We build 2 models of Y on X and vice versa
+```{r}
+set.seed(2022)
+x <- rnorm(100)
+y <- 2*x + rnorm(100, sd = 2)
+df0 <- data.frame(x, y)
+lm.fit0 <- lm(y ~ x +0, data=df0)
+lm.fit1 <- lm(x ~ y +0, data=df0)
+par(mfrow = c(1,2))
+```
+\newpage
+## Obviously the coefficient estimates are different.
+```{r fig1, fig.height = 3, fig.width = 6}
+plot(x, y, xlab = "Predictors", ylab= "Response")
+abline(lm.fit0, lwd=3, col=5)
+abline(lm.fit1, lwd=3, col=2)
+```
+\newpage
+
+## (c) We try the same this but with a diffent formula for the model
+```{r}
+set.seed(2022)
+x <- rnorm(100)
+y <- x
+df1 <- data.frame(x, y)
+lm.fit2 <- lm(y ~ x + 0, data=df1)
+lm.fit3 <- lm(x ~ y + 0, data=df1)
+```
+\newpage
+## Obviously the coefficient estimates are the same.
+```{r fig2, fig.height = 3, fig.width = 6}
+plot(x, y, xlab = "Predictors", ylab= "Response")
+abline(lm.fit2, lwd=3, col=5)
+abline(lm.fit3, lwd=3, col=2)

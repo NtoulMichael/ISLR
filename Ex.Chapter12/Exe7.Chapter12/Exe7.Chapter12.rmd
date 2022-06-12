@@ -1,0 +1,30 @@
+---
+title: "Ex.7Chapter12"
+author: "Ntoulmperis Michail"
+date: "27/5/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## To start with,
+We  are going scale our data set properly and try to compute the constant K
+
+
+$$euclidean\approx K * correlation$$
+
+```{r}
+USA.scale <- scale(USArrests)
+
+correlation <- as.dist(1-cor(t(USA.scale)))
+euclidean <- dist(USA.scale)^2
+
+summary(correlation/euclidean)
+```
+Lets say K = Median = 0.133943 
+```{r}
+summary(correlation - 0.133943*euclidean )
+```
+If K=0.1339 then they are approximately equal, different only 0.000004 on average.

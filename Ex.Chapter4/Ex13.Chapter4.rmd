@@ -1,0 +1,305 @@
+---
+title: "Ex.13Chapter4"
+author: "Ntoulmperis Michail"
+date: "25/5/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## (a)
+First we load the libraries and the assign the data set to "df"
+```{r, warning = FALSE, message = FALSE}
+library(ISLR2)
+library(MASS)
+library(class)
+library(e1071)
+df <- Weekly
+```
+
+```{r}
+summary(df)
+
+percdown <- 484/(484+605)
+percup <- 605/(484+605)
+
+percdown
+percup
+cor(df[,-9])
+
+pairs(df)
+
+```
+
+The percentage of "Down" is 44.4% while "Up" is 55.6%. Furthermore, there is
+high correlation between the "Year" and and "volume" variables, we can also 
+observe in the pairs plot. We can see this more clearly in the next output.
+
+
+```{r}
+plot(df$Year, df$Volume, main = "Year vs Volume", xlab = "Year", ylab = "Volume", col=4)
+```
+
+This plot clearly shows that as the years go by, the volume increases.
+
+## (b)
+
+```{r}
+
+glm.fit <- glm(Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume , data=df, family = binomial)
+
+summary(glm.fit)
+
+```
+It would seem that “Lag2” is the only predictor statistically significant as 
+its p-value is less than 0.05.
+
+## (c) LOGISTIC REGRESSION
+
+```{r}
+
+glm.probs <- predict(glm.fit, type = "response")
+
+glm.pred <- rep("Down", 1089)
+
+glm.pred[glm.probs > 0.5] <- "Up"
+
+table(glm.pred, df$Direction)
+
+mean(glm.pred == df$Direction)
+mean(glm.pred != df$Direction)
+
+
+```
+The logistic regression model that we built was 56.10652 % accurate. We computed
+this by calculating the mean as seen above. From the confusion matrix we can see
+that the main diagonal contains all the correct predictions.
+
+## (d) LOGISTIC REGRESSION
+
+First we split the data set.
+
+```{r}
+train_index <- df$Year <= 2008
+
+df_train <- df[train_index, ]
+
+df_test <- df[!train_index, ]
+
+```
+
+Now for the model
+
+```{r}
+
+glm.fits <- glm(Direction ~ Lag2, data = df_train, family = binomial)
+
+summary(glm.fits)
+
+
+
+glm.probs <- predict(glm.fits, df_test, type="response")
+
+glm.pred <- rep("Down", 104)
+
+glm.pred[glm.probs > 0.5] <- "Up" 
+
+
+
+
+table(glm.pred, df_test$Direction)
+
+ac <- mean(glm.pred == df_test$Direction)
+
+ac
+```
+We can see in the output the confusion matrix. The accuracy of the model is 62.5%
+
+## (e) LINEAR DISCRIMINANT ANALYSIS (LDA) 
+```{r}
+lda.fit <- lda(Direction ~ Lag2, df_train)
+
+lda.fit
+
+
+lda.pred <- predict(lda.fit, df_test)
+
+lda.class <- lda.pred$class
+
+table(lda.class, df_test$Direction)
+
+ac <- mean(lda.class == df_test$Direction)
+
+ac
+``````
+We can see in the output the confusion matrix. The accuracy of the model is 62.5%.
+Which is identical to glm.fit
+
+## (f) QUADRIC DISCRIMINANT ANALYSIS (QDA)
+
+```{r}
+
+qda.fit <- qda(Direction ~ Lag2, df_train)
+
+qda.fit
+
+
+qda.pred <- predict(qda.fit, df_test)
+
+qda.class <- qda.pred$class
+
+table(qda.class, df_test$Direction)
+
+
+ac <- mean(qda.class == df_test$Direction)
+
+ac
+```
+The accuracy of the model is 58.65385%
+
+## (g) KNN(k=1)
+
+```{r}
+
+train.X <- as.matrix(df_train$Lag2)
+
+test.X <- as.matrix(df_test$Lag2)
+
+train.target <- df_train$Direction
+
+set.seed(2022)
+
+knn.pred <- knn(train.X, test.X, train.target, k=1)
+
+table(knn.pred, df_test$Direction)
+
+ac <- mean(knn.pred == df_test$Direction)
+
+ac
+```
+Using KNN with k = 1, we may conclude that the percentage of correct predictions on the test data is 50.96154%. 
+
+## (h) Naive Bayes
+
+```{r}
+
+nb.fit <- naiveBayes(Direction ~ Lag2, df_train)
+
+nb.fit
+
+nb.pred <- predict(nb.fit, df_test)
+
+table(nb.pred, df_test$Direction)
+
+ac <- mean(nb.pred == df_test$Direction)
+
+ac
+```
+Naive Bayes performs very well on this data, with an accuracy of 58.65385 %.
+
+## (i)
+
+Comparing the accuracy of the models we have that the best one seems to be
+Logistic Regression along side LDA, both hold the same accuracy. The order from best to worst goes as follows.
+
+(Logistic Regression = LDA) > (Naive Bayes = Qda ) > Knn(k=1)
+
+## (j)
+For the last section we will try to use the "Lag1" as an interaction in combination with "Lag2" for all the methods except Knn. Lastly for Knn we will try and see what results we get for k=2 and k=3 
+
+
+For Logistic Regression
+
+```{r}
+glm.fits <- glm(Direction ~ Lag2*Lag1, data = df_train, family = binomial)
+summary(glm.fits)
+glm.probs <- predict(glm.fits, df_test, type="response")
+glm.pred <- rep("Down", 104)
+glm.pred[glm.probs > 0.5] <- "Up" 
+table(glm.pred, df_test$Direction)
+ac <- mean(glm.pred == df_test$Direction)
+ac
+```
+As we can see the accuracy has decreased.
+
+For LDA
+
+```{r}
+lda.fit <- lda(Direction ~ Lag2*Lag1, df_train)
+lda.fit
+lda.pred <- predict(lda.fit, df_test)
+lda.class <- lda.pred$class
+table(lda.class, df_test$Direction)
+ac <- mean(lda.class == df_test$Direction)
+ac
+```
+The accuracy on this model has also decreased.
+
+For QDA
+```{r}
+qda.fit <- qda(Direction ~ Lag2*Lag1, df_train)
+qda.fit
+qda.pred <- predict(qda.fit, df_test)
+qda.class <- qda.pred$class
+table(qda.class, df_test$Direction)
+ac <- mean(qda.class == df_test$Direction)
+ac
+```
+The accuracy on this model has also decreased.
+
+For Naive Bayes
+```{r}
+nb.fit <- naiveBayes(Direction ~ Lag2 + Lag1, df_train)
+nb.fit
+nb.pred <- predict(nb.fit, df_test)
+table(nb.pred, df_test$Direction)
+ac <- mean(nb.pred == df_test$Direction)
+ac
+```
+The accuracy on this model has also decreased.
+
+For KNN, k=2
+
+```{r}
+train.X <- as.matrix(df_train$Lag2)
+
+test.X <- as.matrix(df_test$Lag2)
+
+train.target <- df_train$Direction
+
+set.seed(2022)
+
+knn.pred <- knn(train.X, test.X, train.target, k=2)
+
+table(knn.pred, df_test$Direction)
+
+ac <- mean(knn.pred == df_test$Direction)
+
+ac
+```
+We can see that the accuracy has improved
+
+```{r}
+train.X <- as.matrix(df_train$Lag2)
+
+test.X <- as.matrix(df_test$Lag2)
+
+train.target <- df_train$Direction
+
+set.seed(2022)
+
+knn.pred <- knn(train.X, test.X, train.target, k=3)
+
+table(knn.pred, df_test$Direction)
+
+ac <- mean(knn.pred == df_test$Direction)
+
+ac
+```
+The accuracy has decreased but is still better than k=1
+
+
+In conclusion, the best modification can be in the Knn method, where we can change the k=1 into k=2. Without any modifications the best methods seem to be
+Logistic Regression and LDA while using only the "Lag2" as a predictor.

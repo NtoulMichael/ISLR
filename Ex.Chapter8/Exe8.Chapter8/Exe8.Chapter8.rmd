@@ -1,0 +1,123 @@
+---
+title: "Ex.7Chapter8"
+author: "Ntoulmperis Michail"
+date: "26/5/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## First we load the libraries and the assign the data set to "df"
+```{r, warning = FALSE, message = FALSE}
+library(tree)
+library(ISLR2)
+library(randomForest)
+df <- Carseats
+```
+
+## Split the data
+```{r}
+set.seed(1)
+train <-sample(1:nrow(df),nrow(df)*0.7)
+
+df.train<-df[train,]
+df.test<-df[-train,"Sales"]
+```
+
+## Build the model and plot the tree
+
+```{r}
+tree.df<-tree(Sales ~ ., data=df, subset = train)
+
+summary(tree.df)
+
+plot(tree.df)
+
+text(tree.df,pretty=0)
+
+```
+
+## Prediction and MSE
+
+```{r, message = FALSE}
+
+ 
+tree.prediction <- predict(tree.df, newdata = df.train)
+
+tree.mse <- mean((df.test - tree.prediction)^2)
+
+tree.mse
+```
+As we can see the Mse is 13.1404
+
+```{r}
+set.seed(1)
+
+tree.df<-tree(Sales ~ ., data=df, subset = train)
+
+
+cv.df <- cv.tree(tree.df)
+
+plot(cv.df$size,cv.df$dev,xlab = "Size of Tree",ylab = "Deviance",type = "b")
+
+
+prune.predict<-predict(tree.df, df.test)
+
+mean((prune.predict-df.test)^2)
+
+
+```
+
+We have used cross validation to find the size to which the tree should be 
+pruned. The size for which the deviance is minimum is selected as the optimal 
+size.
+
+## Bagging
+
+```{r}
+set.seed(1)
+
+bag.df<-randomForest(Sales ~ ., df.train,importance=TRUE,mtry=10)
+
+importance(bag.df)
+
+
+```
+
+```{r}
+bag.df.predict<-predict(bag.df, df.test)
+mean((bag.df.predict-df.test)^2)
+
+```
+We use randomForest with m=p=10 total number of predictors which is equivalent
+to bagging. We can see that Price and ShelveLoc are the most important
+predictors.
+
+
+```{r}
+rf.df <- randomForest(Sales ~ .,df.train, importance=TRUE, mtry=sqrt(10))
+importance(rf.df)
+
+
+```
+
+```{r}
+
+
+rf.car.predict<-predict(rf.df, df.test)
+
+
+mean((rf.car.predict-df.test)^2)
+
+```
+Using Random Forest the MSE increased compared to bagging, the important 
+variables chosen by Random Forest are the same as the one chosen by Bagging
+Random Forest avoids correlated trees and hence is expected to perform better
+than Bagging, the results from our analysis are tend to show that Bagging in
+this case is better.
+
+
+
+
